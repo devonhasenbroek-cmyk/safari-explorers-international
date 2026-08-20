@@ -115,6 +115,78 @@ const PLACES = { total: 8, remaining: 4 };
   }
 
   /* ---------------------------------------------------------------
+     Hero film
+
+     The still image is the poster and the permanent fallback. The film is
+     only loaded when it can be shown, and only fades in once it is actually
+     playing, so a slow connection, a failed request or a browser that blocks
+     autoplay all degrade to the still rather than to a black rectangle.
+
+     Two encodes exist. Which one is fetched depends on how large the video
+     has to be drawn, not on viewport width alone: the film is cropped to
+     cover, so on a tall or portrait screen it is height that decides.
+  --------------------------------------------------------------- */
+  (function () {
+    var hero = document.getElementById('hero');
+    var video = document.getElementById('heroVideo');
+    if (!hero || !video) return;
+
+    var started = false;
+
+    function pickSource() {
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var needed = Math.max(window.innerWidth, window.innerHeight * 16 / 9) * dpr;
+      var c = navigator.connection;
+      /* respect an explicit data-saver or a genuinely slow connection */
+      if (c && (c.saveData || /(^|-)(2g|3g)$/.test(c.effectiveType || ''))) {
+        return BASE + 'assets/video/hero-loop-720.mp4';
+      }
+      return BASE + 'assets/video/hero-loop-' + (needed >= 1500 ? '1080' : '720') + '.mp4';
+    }
+
+    function play() {
+      var p = video.play();
+      if (p && p.catch) p.catch(function () { /* autoplay refused: poster stays */ });
+    }
+
+    function start() {
+      if (started || reduceMotion) return;
+      started = true;
+      video.src = pickSource();
+      video.load();
+      play();
+      video.addEventListener('playing', function () { hero.classList.add('video-on'); }, { once: true });
+      video.addEventListener('error', function () { hero.classList.remove('video-on'); }, { once: true });
+    }
+
+    /* let the poster and the rest of the page land first */
+    if (document.readyState === 'complete') start();
+    else window.addEventListener('load', start, { once: true });
+
+    /* stop decoding while the hero is off-screen or the tab is hidden */
+    if ('IntersectionObserver' in window) {
+      var heroIo = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!started) return;
+          if (entry.isIntersecting) play();
+          else video.pause();
+        });
+      }, { threshold: 0 });
+      heroIo.observe(hero);
+    }
+    document.addEventListener('visibilitychange', function () {
+      if (!started) return;
+      if (document.hidden) video.pause(); else play();
+    });
+
+    /* honour a reduced-motion preference flipped mid-session, both ways */
+    window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', function (e) {
+      if (e.matches) { video.pause(); hero.classList.remove('video-on'); }
+      else { reduceMotion = false; start(); }
+    });
+  })();
+
+  /* ---------------------------------------------------------------
      Availability, rendered from PLACES
   --------------------------------------------------------------- */
   Array.prototype.forEach.call(document.querySelectorAll('[data-places]'), function (el) {

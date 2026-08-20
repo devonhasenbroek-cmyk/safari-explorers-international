@@ -91,9 +91,14 @@
 
 <main id="main">
 
-<section class="hero">
+<section class="hero" id="hero">
   <div class="hero__media">
+    <!-- The still is the poster and the permanent fallback: it is what shows on
+         reduced-motion, on a failed video load, and for the first moment of every
+         visit. The film is layered over it once it can actually play. -->
     <picture><source srcset="assets/img/hero-bushveld.webp" type="image/webp"><img alt="Open bushveld at sunrise in Dinokeng, an open game-drive vehicle small in the distance beneath flat-topped acacias and a low ridge line." width="2752" height="1536" fetchpriority="high" decoding="async" src="assets/img/hero-bushveld.jpg"></picture>
+    <video id="heroVideo" class="hero__video" muted loop playsinline preload="none"
+           aria-hidden="true" tabindex="-1"></video>
   </div>
   <div class="hero__veil" aria-hidden="true"></div>
   <div class="wrap hero__inner">
