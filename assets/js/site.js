@@ -159,9 +159,17 @@ const PLACES = { total: 8, remaining: 4 };
       video.addEventListener('error', function () { hero.classList.remove('video-on'); }, { once: true });
     }
 
-    /* let the poster and the rest of the page land first */
-    if (document.readyState === 'complete') start();
-    else window.addEventListener('load', start, { once: true });
+    /* Wait for load, then for the browser to actually be idle, before asking for
+       two megabytes. Firing on load alone still puts the request inside the
+       window that first and largest contentful paint are measured over, and it
+       measurably delayed both. The poster is already on screen by this point, so
+       nothing the visitor can see is waiting on it. */
+    function schedule() {
+      if ('requestIdleCallback' in window) window.requestIdleCallback(start, { timeout: 2500 });
+      else window.setTimeout(start, 1200);
+    }
+    if (document.readyState === 'complete') schedule();
+    else window.addEventListener('load', schedule, { once: true });
 
     /* stop decoding while the hero is off-screen or the tab is hidden */
     if ('IntersectionObserver' in window) {
