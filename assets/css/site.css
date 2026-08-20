@@ -345,8 +345,12 @@ p a:hover,li a:hover{ text-decoration-thickness:2px; }
 /* ---------- species ---------- */
 .species{ background:var(--ink-soft); border:1px solid rgba(138,97,41,.4); border-radius:3px; overflow:hidden;
   display:flex; flex-direction:column; }
-.species__fig{ position:relative; aspect-ratio:4/3; background:var(--ink); }
-.species__fig img{ width:100%; height:100%; object-fit:cover; }
+.species__fig{ position:relative; aspect-ratio:4/3; overflow:hidden; background:var(--ink); }
+/* absolutely positioned rather than height:100%. A percentage height does not
+   resolve against an aspect-ratio-derived parent, so the image falls back to its
+   auto height: harmless for a landscape source, but a portrait source then forces
+   the card taller than its siblings and breaks the whole row. */
+.species__fig img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
 .species__body{ padding:22px 22px 24px; display:flex; flex-direction:column; gap:9px; flex:1; }
 .species h3{ font-size:1.2rem; }
 .species__sci{ font-style:italic; font-size:14px; color:var(--bone-dim); margin-top:-6px; }
